@@ -9,6 +9,9 @@ import org.springframework.boot.test.web.client.TestRestTemplate
 import org.springframework.boot.test.web.server.LocalServerPort
 import org.springframework.http.HttpStatus
 import org.springframework.http.MediaType
+import java.time.LocalDateTime
+import java.util.Locale
+import java.time.format.DateTimeFormatter;
 
 @SpringBootTest(webEnvironment = WebEnvironment.RANDOM_PORT)
 class IntegrationTest {
@@ -17,6 +20,22 @@ class IntegrationTest {
 
     @Autowired
     private lateinit var restTemplate: TestRestTemplate
+
+    // Función que genera un saludo personalizado dependiendo de la hora actual.
+    private fun getGreeting(name: String = ""): String {
+        val now = LocalDateTime.now()  // Obtenemos la fecha y hora actual
+        val hour = now.hour // Extraemos la hora (0–23)
+
+        // Determinamos el saludo base según el rango horario
+        val baseGreeting = when (hour) {
+            in 6..13 -> "Buenos días"
+            in 13..21 -> "Buenas tardes"
+            else -> "Buenas noches"
+        }
+
+        // Si el nombre no está en blanco, lo agregamos al saludo.  Si está vacío, solo devolvemos el saludo base.
+        return if (name.isNotBlank()) "$baseGreeting, $name" else baseGreeting
+    }
 
     @Test
     fun `should return home page with modern title and client-side HTTP debug`() {
@@ -31,19 +50,23 @@ class IntegrationTest {
 
     @Test
     fun `should return personalized greeting when name is provided`() {
+        val name = "Developer"
+        val expectedGreeting = getGreeting(name)
         val response = restTemplate.getForEntity("http://localhost:$port?name=Developer", String::class.java)
         
         assertThat(response.statusCode).isEqualTo(HttpStatus.OK)
-        assertThat(response.body).contains("Hello, Developer!")
+        assertThat(response.body).contains(expectedGreeting)
     }
 
     @Test
     fun `should return API response with timestamp`() {
+        val name = "Test"
+        val expectedGreeting = getGreeting(name)
         val response = restTemplate.getForEntity("http://localhost:$port/api/hello?name=Test", String::class.java)
         
         assertThat(response.statusCode).isEqualTo(HttpStatus.OK)
         assertThat(response.headers.contentType).isEqualTo(MediaType.APPLICATION_JSON)
-        assertThat(response.body).contains("Hello, Test!")
+        assertThat(response.body).contains(expectedGreeting)
         assertThat(response.body).contains("timestamp")
     }
 

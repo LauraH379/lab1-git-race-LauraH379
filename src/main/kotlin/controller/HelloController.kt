@@ -7,9 +7,30 @@ import org.springframework.ui.Model
 import org.springframework.web.bind.annotation.GetMapping
 import org.springframework.web.bind.annotation.RequestParam
 import org.springframework.web.bind.annotation.RestController
+import java.time.LocalDateTime
+import java.util.Locale
+import java.time.format.DateTimeFormatter;
+
+
+// Función que genera un saludo personalizado dependiendo de la hora actual.
+private fun getGreeting(name: String = ""): String {
+    val now = LocalDateTime.now()  // Obtenemos la fecha y hora actual
+    val hour = now.hour // Extraemos la hora (0–23)
+
+    // Determinamos el saludo base según el rango horario
+    val baseGreeting = when (hour) {
+        in 6..13 -> "Buenos días"
+        else -> "Buenas noches"
+    }
+
+    // Si el nombre no está en blanco, lo agregamos al saludo.  Si está vacío, solo devolvemos el saludo base.
+    return if (name.isNotBlank()) "$baseGreeting, $name" else baseGreeting
+}
+
 
 @Controller
 class HelloController(
+
     @param:Value("\${app.message:Hello World}") 
     private val message: String
 ) {
@@ -19,7 +40,10 @@ class HelloController(
         model: Model,
         @RequestParam(defaultValue = "") name: String
     ): String {
-        val greeting = if (name.isNotBlank()) "Hello, $name!" else message
+
+        //Si hay nombre, devolvemos saludo personalizado. Sino, el mensaje predeterminado.
+        val greeting = if (name.isNotBlank()) getGreeting(name) else message
+        
         model.addAttribute("message", greeting)
         model.addAttribute("name", name)
         return "welcome"
@@ -31,8 +55,12 @@ class HelloApiController {
     
     @GetMapping("/api/hello", produces = [MediaType.APPLICATION_JSON_VALUE])
     fun helloApi(@RequestParam(defaultValue = "World") name: String): Map<String, String> {
+
+        //Obtenemos el saludo personalizado.
+        val greeting = getGreeting(name)
+
         return mapOf(
-            "message" to "Hello, $name!",
+            "message" to "$greeting",
             "timestamp" to java.time.Instant.now().toString()
         )
     }
