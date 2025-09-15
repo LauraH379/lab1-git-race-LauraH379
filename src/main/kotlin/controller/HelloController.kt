@@ -20,6 +20,7 @@ private fun getGreeting(name: String = ""): String {
     // Determinamos el saludo base según el rango horario
     val baseGreeting = when (hour) {
         in 6..13 -> "Buenos días"
+        in 13..21 -> "Buenas tardes"
         else -> "Buenas noches"
     }
 
