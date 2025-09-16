@@ -10,7 +10,8 @@ import org.springframework.web.bind.annotation.RestController
 import java.time.LocalDateTime
 import java.util.Locale
 import java.time.format.DateTimeFormatter;
-
+import es.unizar.webeng.hello.repositories.*
+import es.unizar.webeng.hello.entities.*
 
 // Función que genera un saludo personalizado dependiendo de la hora actual.
 private fun getGreeting(name: String = ""): String {
@@ -33,7 +34,8 @@ private fun getGreeting(name: String = ""): String {
 class HelloController(
 
     @param:Value("\${app.message:Hello World}") 
-    private val message: String
+    private val message: String,
+    private val greetingRepo: GreetingHistoryRepository
 ) {
     
     @GetMapping("/")
@@ -45,6 +47,11 @@ class HelloController(
         //Si hay nombre, devolvemos saludo personalizado. Sino, el mensaje predeterminado.
         val greeting = if (name.isNotBlank()) getGreeting(name) else message
         
+        // Guardar saludo en la base de datos si hay nombre
+        if (name.isNotBlank()) {
+            greetingRepo.save(GreetingHistory(username = name, message = greeting))
+        }
+
         model.addAttribute("message", greeting)
         model.addAttribute("name", name)
         return "welcome"
@@ -52,7 +59,9 @@ class HelloController(
 }
 
 @RestController
-class HelloApiController {
+class HelloApiController (
+    private val greetingRepo: GreetingHistoryRepository
+) {
     
     @GetMapping("/api/hello", produces = [MediaType.APPLICATION_JSON_VALUE])
     fun helloApi(@RequestParam(defaultValue = "World") name: String): Map<String, String> {
@@ -60,9 +69,13 @@ class HelloApiController {
         //Obtenemos el saludo personalizado.
         val greeting = getGreeting(name)
 
+        // Guardar saludo en la BD
+        greetingRepo.save(GreetingHistory(username = name, message = greeting))
+
         return mapOf(
             "message" to "$greeting",
             "timestamp" to java.time.Instant.now().toString()
         )
     }
 }
+

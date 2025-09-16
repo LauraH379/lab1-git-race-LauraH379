@@ -12,6 +12,8 @@ import org.springframework.http.MediaType
 import java.time.LocalDateTime
 import java.util.Locale
 import java.time.format.DateTimeFormatter;
+import es.unizar.webeng.hello.entities.GreetingHistory
+import es.unizar.webeng.hello.repositories.GreetingHistoryRepository
 
 @SpringBootTest(webEnvironment = WebEnvironment.RANDOM_PORT)
 class IntegrationTest {
@@ -20,6 +22,9 @@ class IntegrationTest {
 
     @Autowired
     private lateinit var restTemplate: TestRestTemplate
+
+    @Autowired
+    private lateinit var greetingRepo: GreetingHistoryRepository
 
     // Función que genera un saludo personalizado dependiendo de la hora actual.
     private fun getGreeting(name: String = ""): String {
@@ -98,5 +103,21 @@ class IntegrationTest {
         assertThat(response.body).contains("API Endpoint")
         assertThat(response.body).contains("Health Check")
         assertThat(response.body).contains("Learning Notes:")
+    }
+
+    @Test
+    fun `should save greeting in database when calling API`() {
+        val name = "IntegrationUser"
+        val expectedMessage = getGreeting(name)
+
+        // Llamamos al endpoint de API que guarda en BD
+        val response = restTemplate.getForEntity("http://localhost:$port/api/hello?name=$name", String::class.java)
+        assertThat(response.statusCode).isEqualTo(org.springframework.http.HttpStatus.OK)
+
+        // Verificamos que se ha guardado en la BD
+        val greetingsInDb: List<GreetingHistory> = greetingRepo.findByUsername(name)
+        assertThat(greetingsInDb).isNotEmpty
+        assertThat(greetingsInDb[0].username).isEqualTo(name)
+        assertThat(greetingsInDb[0].message).isEqualTo(expectedMessage)
     }
 }

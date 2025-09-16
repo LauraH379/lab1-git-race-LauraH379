@@ -13,6 +13,10 @@ import org.springframework.test.web.servlet.result.MockMvcResultMatchers.*
 import java.time.LocalDateTime
 import java.util.Locale
 import java.time.format.DateTimeFormatter;
+import org.springframework.boot.test.mock.mockito.MockBean
+import es.unizar.webeng.hello.entities.GreetingHistory
+import es.unizar.webeng.hello.repositories.GreetingHistoryRepository
+
 
 @WebMvcTest(HelloController::class, HelloApiController::class)
 class HelloControllerMVCTests {
@@ -21,6 +25,9 @@ class HelloControllerMVCTests {
 
     @Autowired
     private lateinit var mockMvc: MockMvc
+
+    @MockBean
+    private lateinit var greetingRepo: GreetingHistoryRepository 
 
     // Función que genera un saludo personalizado dependiendo de la hora actual.
     private fun getGreeting(name: String = ""): String {

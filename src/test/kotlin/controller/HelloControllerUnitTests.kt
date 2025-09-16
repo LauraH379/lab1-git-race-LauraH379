@@ -8,6 +8,14 @@ import org.springframework.ui.ExtendedModelMap
 import java.time.LocalDateTime
 import java.util.Locale
 import java.time.format.DateTimeFormatter;
+import es.unizar.webeng.hello.entities.GreetingHistory
+import es.unizar.webeng.hello.repositories.GreetingHistoryRepository
+import org.mockito.kotlin.mock
+import org.mockito.kotlin.whenever
+import org.mockito.kotlin.verify
+import org.mockito.kotlin.times
+
+
 
 class HelloControllerUnitTests {
     private lateinit var controller: HelloController
@@ -15,7 +23,8 @@ class HelloControllerUnitTests {
     
     @BeforeEach
     fun setup() {
-        controller = HelloController("Test Message")
+        val mockRepo = mock<GreetingHistoryRepository>()
+        controller = HelloController("Test Message", mockRepo)
         model = ExtendedModelMap()
     }
 
@@ -59,7 +68,8 @@ class HelloControllerUnitTests {
     fun `should return API response with timestamp`() {
         val name = "Test"
         val expectedMessage = getGreeting(name)
-        val apiController = HelloApiController()
+        val mockRepo = mock<GreetingHistoryRepository>()
+        val apiController = HelloApiController(mockRepo)
         val response = apiController.helloApi("Test")
         
         assertThat(response).containsKey("message")
