@@ -13,6 +13,7 @@ import org.springframework.test.web.servlet.MockMvc
 import org.springframework.test.web.servlet.request.MockMvcRequestBuilders.get
 import org.springframework.test.web.servlet.result.MockMvcResultHandlers.print
 import org.springframework.test.web.servlet.result.MockMvcResultMatchers.*
+import es.unizar.webeng.hello.services.getGreeting
 
 @WebMvcTest
 class BdMVCTests {
@@ -23,16 +24,7 @@ class BdMVCTests {
     @MockBean
     private lateinit var greetingRepo: GreetingHistoryRepository
 
-    // Función de ayuda para generar saludos
-    private fun getGreeting(name: String = ""): String {
-        val hour = java.time.LocalDateTime.now().hour
-        val base = when (hour) {
-            in 6..13 -> "Buenos días"
-            in 13..21 -> "Buenas tardes"
-            else -> "Buenas noches"
-        }
-        return if (name.isNotBlank()) "$base, $name" else base
-    }
+    
 
     @Test
     fun `should return history with mocked database`() {
