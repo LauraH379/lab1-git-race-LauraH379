@@ -1,4 +1,4 @@
-package es.unizar.webeng.hello.controller
+package es.unizar.webeng.hello.bd
 
 import es.unizar.webeng.hello.entities.GreetingHistory
 import es.unizar.webeng.hello.repositories.GreetingHistoryRepository

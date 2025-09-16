@@ -15,6 +15,10 @@ import java.time.format.DateTimeFormatter;
 import es.unizar.webeng.hello.entities.GreetingHistory
 import es.unizar.webeng.hello.repositories.GreetingHistoryRepository
 import es.unizar.webeng.hello.services.getGreeting
+import org.springframework.core.ParameterizedTypeReference
+import org.springframework.http.HttpMethod
+import org.springframework.http.ResponseEntity
+import java.util.UUID
 
 @SpringBootTest(webEnvironment = WebEnvironment.RANDOM_PORT)
 class IntegrationTest {
@@ -107,4 +111,44 @@ class IntegrationTest {
         assertThat(greetingsInDb[0].username).isEqualTo(name)
         assertThat(greetingsInDb[0].message).isEqualTo(expectedMessage)
     }
+
+    @Test
+    fun `should return correct statistics for saved greetings`() {
+        val uniqueId = UUID.randomUUID().toString()
+        val name1 = "Alice-$uniqueId"
+        val name2 = "Bob-$uniqueId"
+
+        // Insertamos solo registros nuevos, con nombres únicos
+        greetingRepo.save(GreetingHistory(username = name1, message = "Buenos días, $name1"))
+        greetingRepo.save(GreetingHistory(username = name1, message = "Buenas tardes, $name1"))
+        greetingRepo.save(GreetingHistory(username = name1, message = "Buenas noches, $name1"))
+
+        greetingRepo.save(GreetingHistory(username = name2, message = "Buenos días, $name2"))
+        greetingRepo.save(GreetingHistory(username = name2, message = "Buenos días, $name2"))
+
+        val typeRef = object : ParameterizedTypeReference<List<Map<String, Any>>>() {}
+        val response: ResponseEntity<List<Map<String, Any>>> = restTemplate.exchange(
+            "http://localhost:$port/api/stats",
+            HttpMethod.GET,
+            null,
+            typeRef
+        )
+
+        assertThat(response.statusCode).isEqualTo(HttpStatus.OK)
+        val stats = response.body!!
+
+        // Solo buscamos las estadísticas de nuestros nombres únicos
+        val aliceStats = stats.find { it["username"] == name1 }!!
+        assertThat(aliceStats["total"]).isEqualTo(3)
+        assertThat(aliceStats["buenosDias"]).isEqualTo(1)
+        assertThat(aliceStats["buenasTardes"]).isEqualTo(1)
+        assertThat(aliceStats["buenasNoches"]).isEqualTo(1)
+
+        val bobStats = stats.find { it["username"] == name2 }!!
+        assertThat(bobStats["total"]).isEqualTo(2)
+        assertThat(bobStats["buenosDias"]).isEqualTo(2)
+        assertThat(bobStats["buenasTardes"]).isEqualTo(0)
+        assertThat(bobStats["buenasNoches"]).isEqualTo(0)
+    }
+
 }

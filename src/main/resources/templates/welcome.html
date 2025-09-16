@@ -129,6 +129,29 @@
                                 </div>
                             </div>
                         </div>
+                        <div class="row mt-4">
+                            <div class="col-12">
+                                <div class="card">
+                                    <div class="card-body text-center">
+                                        <h5>Database Greeting Statistics</h5>
+                                        <button id="showStatsBtn" class="btn btn-primary mb-3">Mostrar Estadísticas</button>
+                                        
+                                        <table id="statsTable" class="table table-striped table-bordered d-none">
+                                            <thead>
+                                                <tr>
+                                                    <th>Usuario</th>
+                                                    <th>Total</th>
+                                                    <th>Buenos Días</th>
+                                                    <th>Buenas Tardes</th>
+                                                    <th>Buenas Noches</th>
+                                                </tr>
+                                            </thead>
+                                            <tbody></tbody>
+                                        </table>
+                                    </div>
+                                </div>
+                            </div>
+                        </div>
                     </div>
                 </div>
             </div>
@@ -159,6 +182,36 @@
             };
             document.head.appendChild(script);
         })();
+    </script>
+
+    <script>
+    document.getElementById("showStatsBtn").addEventListener("click", async () => {
+        try {
+            const res = await fetch("/api/stats");
+            const data = await res.json();
+
+            const tbody = document.querySelector("#statsTable tbody");
+            tbody.innerHTML = ""; // Limpiar tabla antes de rellenar
+
+            data.forEach(stat => {
+                const tr = document.createElement("tr");
+                tr.innerHTML = `
+                    <td>${stat.username}</td>
+                    <td>${stat.total}</td>
+                    <td>${stat.buenosDias}</td>
+                    <td>${stat.buenasTardes}</td>
+                    <td>${stat.buenasNoches}</td>
+                `;
+                tbody.appendChild(tr);
+            });
+
+            document.getElementById("statsTable").classList.remove("d-none");
+
+        } catch (err) {
+            console.error("Error fetching stats:", err);
+            alert("No se pudo cargar las estadísticas");
+        }
+    });
     </script>
 </body>
 </html>
